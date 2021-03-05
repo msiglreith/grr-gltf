@@ -30,7 +30,7 @@ pub fn main_fs(
     #[spirv(location = 2)] f_tangent_world: Input<f32x4>,
     #[spirv(location = 3)] f_position_world: Input<f32x3>,
     mut output: Output<f32x4>,
-    #[spirv(binding = 0)] u_locals: Uniform<LocalsPbr>,
+    #[spirv(binding = 0)] u_locals_fs: Uniform<LocalsPbr>,
     #[spirv(binding = 0)] u_albedo: UniformConstant<SampledImage<Image2d>>,
     #[spirv(binding = 1)] u_normals: UniformConstant<SampledImage<Image2d>>,
     #[spirv(binding = 2)] u_metal_roughness: UniformConstant<SampledImage<Image2d>>,
@@ -76,7 +76,7 @@ pub fn main_fs(
 
     let specular_color = vec3(mix(0.04, albedo.x, metalness), mix(0.04, albedo.y, metalness), mix(0.04, albedo.z, metalness));
 
-    let u_locals = u_locals.load();
+    let u_locals = u_locals_fs.load();
     let eye_world = vec3(u_locals.eye_world.x, u_locals.eye_world.y, u_locals.eye_world.z);
     let view_world = (eye_world - f_position_world).normalize();
 
@@ -121,13 +121,13 @@ pub fn main_vs(
     #[spirv(location = 1)] mut a_texcoord: Output<f32x2>,
     #[spirv(location = 2)] mut a_tangent_world: Output<f32x4>,
     #[spirv(location = 3)] mut a_position_world: Output<f32x3>,
-    #[spirv(binding = 0)] u_locals: Uniform<LocalsPbr>,
+    #[spirv(binding = 0)] u_locals_vs: Uniform<LocalsPbr>,
 ) {
     a_normal_world.store(v_normal_obj.load());
     a_texcoord.store(v_texcoord.load());
     a_tangent_world.store(v_tangent_obj.load());
 
-    let locals = u_locals.load();
+    let locals = u_locals_vs.load();
 
     let pos_obj = v_position_obj.load();
     let pos_world = vec4(pos_obj.x, pos_obj.y, pos_obj.z, 1.0);
