@@ -12,12 +12,12 @@ grr = { git = "https://github.com/msiglreith/grr.git" }
 anyhow = "1"
 image = "0.23"
 glutin = "0.26"
-flink = { git = "https://github.com/msiglreith/flink.git" }
+flink = { path = "../flink" }
 glam = "0.11"
 byteorder = "1"
 
 [build-dependencies]
-spirv-builder = { git = "https://github.com/msiglreith/rust-gpu.git", branch ="gltf" }
+spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "93af32f1077e287f011d1e168326f758885125ad" }
 
 [profile.dev.package.image]
 opt-level = 3
@@ -25,3 +25,8 @@ opt-level = 3
 [profile.dev]
 opt-level = 1
 
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3

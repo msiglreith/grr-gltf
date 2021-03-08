@@ -10,5 +10,6 @@ edition = "2018"
 crate-type = ["dylib"]
 
 [dependencies]
-flink = { git = "https://github.com/msiglreith/flink.git" }
-spirv-std = { git = "https://github.com/msiglreith/rust-gpu.git", branch ="gltf" }
+flink = { path = "../../flink" }
+spirv-std ={ git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "93af32f1077e287f011d1e168326f758885125ad" }
+spirv-std-macros ={ git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "93af32f1077e287f011d1e168326f758885125ad" }
