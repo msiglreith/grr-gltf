@@ -1,10 +1,16 @@
 use spirv_builder::{MemoryModel, SpirvBuilder};
-use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    SpirvBuilder::new("shader")
+fn main() -> anyhow::Result<()> {
+    let result = SpirvBuilder::new("shader")
         .spirv_version(1, 0)
         .memory_model(MemoryModel::GLSL450)
-        .build()?;
+        .print_metadata(false)
+        .build_multimodule()?;
+    let directory = result
+        .values()
+        .next()
+        .and_then(|path| path.parent())
+        .unwrap();
+    println!("cargo:rustc-env=spv={}", directory.to_str().unwrap());
     Ok(())
 }

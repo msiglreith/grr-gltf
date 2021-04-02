@@ -1,5 +1,5 @@
-use flink::Vec3;
-use glutin::event::ElementState;
+use glace::Vec3;
+use winit::event::ElementState;
 
 pub struct InputMap {
     mouse1: ElementState,

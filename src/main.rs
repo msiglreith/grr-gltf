@@ -4,9 +4,14 @@ use std::path::Path;
 use std::time::Instant;
 
 use self::camera::{Camera, InputMap};
-use flink::{f32x3, f32x4, f32x4x4, vec3, vec4};
-use glutin::event::{DeviceEvent, Event, WindowEvent};
-use glutin::event_loop::{ControlFlow, EventLoop};
+use glace::{f32x4, f32x4x4, vec3, vec4};
+use raw_gl_context::{GlConfig, GlContext, Profile};
+use winit::{
+    dpi::LogicalSize,
+    event::{DeviceEvent, Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+};
 
 mod camera;
 mod ktx;
@@ -33,21 +38,42 @@ fn max_mip_levels_2d(width: u32, height: u32) -> u32 {
 
 fn main() -> anyhow::Result<()> {
     unsafe {
-        let begin = Instant::now();
-        let el = EventLoop::new();
-        println!("{:?}", begin.elapsed());
-        let wb = glutin::window::WindowBuilder::new().with_title("grr - cyberpunk");
-        let window = glutin::ContextBuilder::new()
-            .with_srgb(true)
-            .with_multisampling(4)
-            .build_windowed(wb, &el)?
-            .make_current()
-            .unwrap();
-        println!("{:?}", begin.elapsed());
+        let event_loop = EventLoop::new();
+
+        let window = WindowBuilder::new()
+            .with_title("grr :: triangle")
+            .with_inner_size(LogicalSize::new(1024.0, 768.0))
+            .build(&event_loop)?;
+
+        let context = GlContext::create(
+            &window,
+            GlConfig {
+                version: (4, 5),
+                profile: Profile::Core,
+                red_bits: 8,
+                blue_bits: 8,
+                green_bits: 8,
+                alpha_bits: 0,
+                depth_bits: 24,
+                stencil_bits: 0,
+                samples: None,
+                srgb: true,
+                double_buffer: true,
+                vsync: true,
+            },
+        )
+        .unwrap();
+
+        context.make_current();
 
         let grr = grr::Device::new(
-            |symbol| window.get_proc_address(symbol) as *const _,
-            grr::Debug::Disable,
+            |symbol| context.get_proc_address(symbol) as *const _,
+            grr::Debug::Enable {
+                callback: |report, _, _, _, msg| {
+                    // println!("{:?}: {:?}", report, msg);
+                },
+                flags: grr::DebugReport::FULL,
+            },
         );
 
         let directory = Path::new("assets");
@@ -134,7 +160,7 @@ fn main() -> anyhow::Result<()> {
         let sampler = grr.create_sampler(grr::SamplerDesc {
             min_filter: grr::Filter::Linear,
             mag_filter: grr::Filter::Linear,
-            mip_map: None,
+            mip_map: Some(grr::Filter::Linear),
             address: (
                 grr::SamplerAddress::ClampBorder,
                 grr::SamplerAddress::ClampBorder,
@@ -175,14 +201,14 @@ fn main() -> anyhow::Result<()> {
 
         let empty_array = grr.create_vertex_array(&[])?;
 
-        let spirv = include_bytes!(env!("shader.spv"));
+        let spirv_dir = Path::new(env!("spv"));
 
         let pbr_vs = grr.create_shader(
             grr::ShaderStage::Vertex,
             grr::ShaderSource::Spirv {
                 entrypoint: "main_vs",
             },
-            &spirv[..],
+            &std::fs::read(spirv_dir.join("main_vs"))?,
             grr::ShaderFlags::VERBOSE,
         )?;
         let pbr_fs = grr.create_shader(
@@ -190,7 +216,7 @@ fn main() -> anyhow::Result<()> {
             grr::ShaderSource::Spirv {
                 entrypoint: "main_fs",
             },
-            &spirv[..],
+            &std::fs::read(spirv_dir.join("main_fs"))?,
             grr::ShaderFlags::VERBOSE,
         )?;
 
@@ -219,7 +245,7 @@ fn main() -> anyhow::Result<()> {
             grr::ShaderSource::Spirv {
                 entrypoint: "skybox_vs",
             },
-            &spirv[..],
+            &std::fs::read(spirv_dir.join("skybox_vs"))?,
             grr::ShaderFlags::VERBOSE,
         )?;
         let skybox_fs = grr.create_shader(
@@ -227,7 +253,7 @@ fn main() -> anyhow::Result<()> {
             grr::ShaderSource::Spirv {
                 entrypoint: "skybox_fs",
             },
-            &spirv[..],
+            &std::fs::read(spirv_dir.join("skybox_fs"))?,
             grr::ShaderFlags::VERBOSE,
         )?;
 
@@ -350,15 +376,12 @@ fn main() -> anyhow::Result<()> {
         let mut camera = Camera::new(vec3(0.0, 0.0, 0.0), 0.0, 0.0);
         let mut input = InputMap::new();
 
-        el.run(move |event, _, control_flow| {
+        event_loop.run(move |event, _, control_flow| {
             *control_flow = ControlFlow::Wait;
 
             match event {
                 Event::LoopDestroyed => return,
                 Event::WindowEvent { event, .. } => match event {
-                    WindowEvent::Resized(physical_size) => {
-                        window.resize(physical_size);
-                    }
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     _ => (),
                 },
@@ -375,7 +398,7 @@ fn main() -> anyhow::Result<()> {
                     camera.update(&input);
                     input.reset_delta();
 
-                    let size = window.window().inner_size();
+                    let size = window.inner_size();
                     let aspect = size.width as f32 / size.height as f32;
 
                     let eye = camera.position() + camera.view_dir() * 4.5;
@@ -527,10 +550,11 @@ fn main() -> anyhow::Result<()> {
                         0..1,
                         0,
                     );
+
                     grr.delete_buffer(u_locals);
                     grr.delete_buffer(u_locals_inv);
 
-                    window.swap_buffers().unwrap();
+                    context.swap_buffers();
                 }
                 _ => (),
             }

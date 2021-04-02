@@ -3,21 +3,23 @@ name = "grr-gltf"
 version = "0.1.0"
 authors = ["msiglreith <m.siglreith@gmail.com>"]
 edition = "2018"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gltf = "0.15"
 grr = { git = "https://github.com/msiglreith/grr.git" }
 anyhow = "1"
 image = "0.23"
-glutin = "0.26"
-flink = { path = "../flink" }
-glam = "0.11"
+winit = "0.24"
+glace = { git = "https://github.com/msiglreith/glace.git" }
 byteorder = "1"
+raw-gl-context = "0.1.2"
+bincode = "1"
 
 [build-dependencies]
-spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "93af32f1077e287f011d1e168326f758885125ad" }
+spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "f09a5f6e65dd54ef1b825d1bd3987da089c89cd9" }
+anyhow = "1"
 
 [profile.dev.package.image]
 opt-level = 3

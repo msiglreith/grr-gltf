@@ -3,6 +3,7 @@ name = "shader"
 version = "0.1.0"
 authors = ["msiglreith <m.siglreith@gmail.com>"]
 edition = "2018"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,6 +11,6 @@ edition = "2018"
 crate-type = ["dylib"]
 
 [dependencies]
-flink = { path = "../../flink" }
-spirv-std ={ git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "93af32f1077e287f011d1e168326f758885125ad" }
-spirv-std-macros ={ git = "https://github.com/EmbarkStudios/rust-gpu.git", rev = "93af32f1077e287f011d1e168326f758885125ad" }
+glace = { git = "https://github.com/msiglreith/glace.git" }
+spirv-std = "0.4.0-alpha.3"
+spirv-std-macros = "0.4.0-alpha.3"
